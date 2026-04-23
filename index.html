@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+    <meta charset="UTF-8">
+    <title>Эмоциялар мектебі: RPG Ойын</title>
+    <style>
+        body {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #1a1a2e;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            color: white;
+        }
+
+        #game-container {
+            width: 700px;
+            background: #16213e;
+            border: 4px solid #4834d4;
+            border-radius: 15px;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Кейіпкер аймағы */
+        .character-box {
+            height: 250px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            margin-bottom: 20px;
+            background: linear-gradient(to bottom, #0f3460, #16213e);
+            border-radius: 10px;
+            position: relative;
+        }
+
+        .avatar {
+            font-size: 100px;
+            transition: all 0.5s ease;
+        }
+
+        /* Диалогтық терезе */
+        .dialogue-box {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 5px solid #e94560;
+            min-height: 80px;
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+
+        /* Жауап нұсқалары */
+        .answers {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        button {
+            background: #0f3460;
+            color: white;
+            border: 2px solid #4834d4;
+            padding: 12px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            background: #4834d4;
+            transform: translateY(-2px);
+        }
+
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-weight: bold;
+            color: #00d2d3;
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <div class="status-bar">
+        <span>Детектив деңгейі: ⭐ <span id="lvl">1</span></span>
+        <span>Эмпатия ұпайы: ❤️ <span id="points">0</span></span>
+    </div>
+
+    <div class="character-box">
+        <div id="avatar" class="avatar">👤</div>
+    </div>
+
+    <div id="name-tag" style="color: #e94560; font-weight: bold; margin-bottom: 5px;">Белгісіз кейіпкер:</div>
+    <div class="dialogue-box" id="dialogue">
+        ...ойын басталуда...
+    </div>
+
+    <div class="answers" id="options">
+        </div>
+</div>
+
+<script>
+    const scenarios = [
+        {
+            name: "Арман",
+            avatar: "👦",
+            text: "«Менің суретімді ешкім көрмей-ақ қойсыншы... Ол бәрібір әдемі емес...»",
+            options: [
+                { text: "Ол ұялып тұр, қолдау көрсету", points: 20, next: "Сен де солай ойлайсың ба?" },
+                { text: "Күлкіге айналдыру", points: -10, next: "Бұл жақсы емес!" },
+                { text: "Жай ғана кетіп қалу", points: 0, next: "Ол жалғыз қалды." }
+            ],
+            emotion: "😟"
+        },
+        {
+            name: "Айсұлу",
+            avatar: "👧",
+            text: "«Мәссаған! Мен бұл қуыршақты армандап едім! Керемет!»",
+            options: [
+                { text: "Бірге қуану", points: 20, next: "Керемет таңдау!" },
+                { text: "Қызғаныш таныту", points: -5, next: "Көңіл-күй бұзылды." },
+                { text: "Үндемей тұра беру", points: 5, next: "Ол сенің үндемегеніңе таңғалды." }
+            ],
+            emotion: "🤩"
+        },
+        {
+            name: "Мұрат",
+            avatar: "👨‍🎓",
+            text: "«Неге сен менің рұқсатымсыз қаламымды алдың? Қазір әкел!»",
+            options: [
+                { text: "Кешірім сұрау (Ашуын басу)", points: 20, next: "Ашуы басылды." },
+                { text: "Қайтарып бермеу", points: -20, next: "Ұрыс басталды!" },
+                { text: "Айқайлап жауап беру", points: -15, next: "Жағдай ушықты." }
+            ],
+            emotion: "😡"
+        }
+    ];
+
+    let currentStep = 0;
+    let totalPoints = 0;
+
+    function loadGame() {
+        if (currentStep >= scenarios.length) {
+            document.getElementById('game-container').innerHTML = `
+                <div style="text-align:center; padding:50px;">
+                    <h2>Ойын аяқталды! 🎉</h2>
+                    <p style="font-size:24px;">Сенің эмпатия деңгейің: ${totalPoints} ұпай</p>
+                    <button onclick="location.reload()">Қайтадан ойнау</button>
+                </div>
+            `;
+            return;
+        }
+
+        const s = scenarios[currentStep];
+        document.getElementById('avatar').innerText = "👤"; // Басында жабық
+        document.getElementById('avatar').style.filter = "blur(5px)";
+        document.getElementById('name-tag').innerText = s.name + ":";
+        document.getElementById('dialogue').innerText = s.text;
+        
+        const optionsDiv = document.getElementById('options');
+        optionsDiv.innerHTML = "";
+
+        s.options.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.innerText = opt.text;
+            btn.onclick = () => selectOption(opt.points, s.emotion);
+            optionsDiv.appendChild(btn);
+        });
+    }
+
+    function selectOption(p, emo) {
+        totalPoints += p;
+        document.getElementById('points').innerText = totalPoints;
+        
+        // Кейіпкердің шынайы эмоциясын көрсету
+        const avatar = document.getElementById('avatar');
+        avatar.innerText = emo;
+        avatar.style.filter = "none";
+        avatar.style.transform = "scale(1.2)";
+
+        setTimeout(() => {
+            avatar.style.transform = "scale(1)";
+            currentStep++;
+            loadGame();
+        }, 1500);
+    }
+
+    loadGame();
+</script>
+
+</body>
+</html>
